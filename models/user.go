@@ -54,6 +54,7 @@ type UserDao interface {
 	Update(model *UserModel, data interface{}) error
 	Delete(id int) error
 	GetById(id int) (UserModel, error)
+	GetByCondition(condition interface{}) (UserModel, error)
 	SearchUser(username string, limit string, page string) ([]UserModel, error)
 }
 
@@ -89,4 +90,11 @@ func (h UserDaoHandler) GetById(id int) (UserModel, error) {
 	var userModel UserModel
 	err := db.Where("id = ?", id).First(&userModel).Error
 	return userModel, err
+}
+
+func (h UserDaoHandler) GetByCondition(condition interface{}) (UserModel, error) {
+	database := GetDB()
+	var user UserModel
+	err := database.Where(condition).First(&user).Error
+	return user, err
 }

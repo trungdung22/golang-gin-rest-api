@@ -11,11 +11,10 @@ type UserSerializer struct {
 }
 
 type UserResponse struct {
-	Username string  `json:"username"`
-	Email    string  `json:"email"`
-	Bio      string  `json:"bio"`
-	Image    *string `json:"image"`
-	Token    string  `json:"token"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Bio      string `json:"bio"`
+	Token    string `json:"token"`
 }
 
 func (self *UserSerializer) Response() UserResponse {

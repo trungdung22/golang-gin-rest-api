@@ -16,6 +16,12 @@ type UserSignUpRequest struct {
 	Image    string `json:"image" validate:"omitempty,url"`
 }
 
+type LoginRequest struct {
+	// Username string `form:"username" json:"username" xml:"username" binding:"exists,username"`
+	Username string `form:"username" json:"username" xml:"username" binding:"required"`
+	Password string `form:"password"json:"password" binding:"exists,min=8,max=255"`
+}
+
 func SignupValidator(c *gin.Context) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var user UserSignUpRequest
@@ -34,6 +40,14 @@ func SignupValidator(c *gin.Context) gin.HandlerFunc {
 }
 
 func (self *UserSignUpRequest) Bind(c *gin.Context) error {
+	err := utilities.Bind(c, self)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (self *LoginRequest) Bind(c *gin.Context) error {
 	err := utilities.Bind(c, self)
 	if err != nil {
 		return err

@@ -32,21 +32,21 @@ func UsersRegistration(c *gin.Context) {
 
 func UsersLogin(c *gin.Context) {
 
-	var json validators.LoginRequest
-	if err := c.ShouldBindJSON(&json); err != nil {
+	var payload validators.LoginRequest
+	if err := payload.Bind(c); err != nil {
 		c.JSON(http.StatusBadRequest, validators.ValidatorError(err))
 		return
 	}
 
-	user, err := services.FindOneUser(&models.User{Username: json.Username})
+	user, err := services.FindOneUserByAttribute(&models.UserModel{Username: payload.Username})
 
 	if err != nil {
-		c.JSON(http.StatusForbidden, dtos.CreateDetailedErrorDto("login_error", err))
+		c.JSON(http.StatusForbidden, serializers.ResponseError("login", errors.New("user not found")))
 		return
 	}
 
-	if user.IsValidPassword(json.Password) != nil {
-		c.JSON(http.StatusForbidden, dtos.CreateDetailedErrorDto("login", errors.New("invalid credentials")))
+	if user.IsValidPassword(payload.Password) != nil {
+		c.JSON(http.StatusForbidden, serializers.ResponseError("login", errors.New("invalid credentials")))
 		return
 	}
 

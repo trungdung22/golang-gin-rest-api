@@ -28,3 +28,8 @@ func GetUserById(id int) (models.UserModel, error) {
 	handler := models.UserDaoHandler{}
 	return handler.GetById(id)
 }
+
+func FindOneUserByAttribute(condition interface{}) (models.UserModel, error) {
+	handler := models.UserDaoHandler{}
+	return handler.GetByCondition(condition)
+}

@@ -19,10 +19,9 @@ func main() {
 
 	router := gin.Default()
 
-	v1 := router.Group("/api")
-	endpoints.UsersRegister(v1.Group("/users"))
-
-	v1.Use(middlerwares.AuthMiddleware(false))
+	api := router.Group("/api")
+	api.Use(middlerwares.UserLoaderMiddleware())
+	endpoints.UsersRegisterRouter(api.Group("/users"))
 
 	log.Fatal(router.Run(":10000"))
 }
