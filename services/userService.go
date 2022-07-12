@@ -2,21 +2,29 @@ package services
 
 import (
 	"crud-api/models"
-	"crud-api/serializers"
 	"crud-api/validators"
-	"net/http"
-
-	"github.com/gin-gonic/gin"
 )
 
-func UsersRegistration(c *gin.Context) {
-	userModelValidator := validators.NewUserModelValidator()
-	if err := userModelValidator.Bind(c); err != nil {
-		c.JSON(http.StatusUnprocessableEntity, validators.ValidatorError(err))
-		return
+func CreateOneUser(userDto *validators.UserSignUpRequest) error {
+	user := models.UserModel{
+		Username: userDto.Username,
+		Email:    userDto.Email,
+		Bio:      userDto.Bio,
 	}
-	if err := models.Handler.Create(userModelValidator.userModel); err != nil {
-		c.JSON(http.StatusUnprocessableEntity, serializers.ResponseError("database", err))
+	err := user.setPassword(userDto.Password)
+
+	if err != nil {
+		return err
 	}
-	c.JSON(http.StatusOK, userModelValidator.userModel)
+
+	handler := models.UserDaoHandler{}
+	if err := handler.Create(user); err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetUserById(id int) (models.UserModel, error) {
+	handler := models.UserDaoHandler{}
+	return handler.GetById(id)
 }

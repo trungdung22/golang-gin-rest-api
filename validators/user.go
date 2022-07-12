@@ -9,7 +9,7 @@ import (
 )
 
 type UserSignUpRequest struct {
-	Username string `json:"username" validate:"required,alphanum,min=4,max=255"`
+	Username string `json:"username" binding:"required,alphanum,min=4,max=255"`
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,min=8,max=255"`
 	Bio      string `json:"bio" validate:"max=1024"`

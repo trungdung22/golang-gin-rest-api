@@ -1,5 +1,11 @@
 package serializers
 
+import (
+	"crud-api/models"
+
+	"github.com/gin-gonic/gin"
+)
+
 type UserSerializer struct {
 	c *gin.Context
 }
@@ -13,13 +19,11 @@ type UserResponse struct {
 }
 
 func (self *UserSerializer) Response() UserResponse {
-	myUserModel := self.c.MustGet("curr_user_model").(UserModel)
+	myUserModel := self.c.MustGet("currUser").(models.UserModel)
 	user := UserResponse{
 		Username: myUserModel.Username,
 		Email:    myUserModel.Email,
 		Bio:      myUserModel.Bio,
-		Image:    myUserModel.Image,
-		Token:    utilities.GenToken(myUserModel.ID),
 	}
 	return user
 }
