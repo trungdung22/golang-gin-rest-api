@@ -3,12 +3,10 @@ package middlerwares
 import (
 	"crud-api/models"
 	"crud-api/services"
-	"fmt"
+	"crud-api/utilities"
 	"net/http"
-	"os"
 	"strings"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,48 +24,33 @@ func EnforceAuthenticatedMiddleware() gin.HandlerFunc {
 	}
 }
 
+func UpdateUserContext(c *gin.Context, user models.UserModel) {
+	c.Set("currentUser", user)
+	c.Set("currentUserId", user.ID)
+}
+
 func UserLoaderMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		bearer := c.Request.Header.Get("Authorization")
+		bearer := c.Request.Header.Get("authorization")
 		if bearer != "" {
 			jwtParts := strings.Split(bearer, " ")
 			if len(jwtParts) == 2 {
 				jwtEncoded := jwtParts[1]
-
-				token, err := jwt.Parse(jwtEncoded, func(token *jwt.Token) (interface{}, error) {
-					// Theorically we have also to validate the algorithm
-					if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-						return nil, fmt.Errorf("unexpected signin method %v", token.Header["alg"])
-					}
-					secret := []byte(os.Getenv("JWT_SECRET"))
-					return secret, nil
-				})
+				authPayload, err := utilities.GetGoogleUserPayload(jwtEncoded)
 
 				if err != nil {
-					println(err.Error())
+					c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": err.Error()})
 					return
 				}
-				if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-					userId := uint(claims["user_id"].(float64))
-					fmt.Printf("[+] Authenticated request, authenticated user id is %d\n", userId)
 
-					if userId != 0 {
-						// We always need the Roles to be loaded to make authorization decisions based on Roles
-						user, err := services.GetUserById(int(userId))
+				user, err := services.GetUserByEmail(authPayload.Email)
 
-						if err != nil {
-							println(err.Error())
-							return
-						}
-
-						c.Set("currentUser", user)
-						c.Set("currentUserId", user.ID)
-					}
-
-				} else {
-
+				if err != nil {
+					c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": err.Error()})
+					return
 				}
-
+				UpdateUserContext(c, user)
+				c.Next()
 			}
 		}
 	}

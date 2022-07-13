@@ -9,8 +9,7 @@ import (
 
 var DB *gorm.DB
 
-func Connection() (*gorm.DB, error) {
-	dbURL := "postgres://pg:pass@localhost:5432/crud"
+func Connection(dbURL string) (*gorm.DB, error) {
 
 	db, err := gorm.Open(postgres.Open(dbURL), &gorm.Config{})
 
@@ -18,10 +17,10 @@ func Connection() (*gorm.DB, error) {
 		log.Fatal(err.Error)
 	}
 
-	if err = db.AutoMigrate(&Grocery{}); err != nil {
+	if err = db.AutoMigrate(&UserModel{}); err != nil {
 		log.Println(err)
 	}
-
+	DB = db
 	return db, err
 }
 

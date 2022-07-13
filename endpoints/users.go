@@ -1,55 +1,65 @@
 package endpoints
 
 import (
-	"crud-api/models"
+	"crud-api/middlerwares"
 	"crud-api/serializers"
 	"crud-api/services"
-	"crud-api/validators"
+	"crud-api/utilities"
 	"errors"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
 func UsersRegisterRouter(router *gin.RouterGroup) {
-	router.POST("/", UsersRegistration)
-	router.POST("/login", UsersLogin)
-}
-
-func UsersRegistration(c *gin.Context) {
-	userDto := validators.UserSignUpRequest{}
-
-	if err := userDto.Bind(c); err != nil {
-		c.JSON(http.StatusBadRequest, validators.ValidatorError(err))
-		return
+	router.GET("/login", UsersLogin)
+	router.Use(middlerwares.UserLoaderMiddleware())
+	router.Use(middlerwares.EnforceAuthenticatedMiddleware())
+	{
+		router.GET("/", UserList)
 	}
-	if err := services.CreateOneUser(&userDto); err != nil {
-		c.JSON(http.StatusUnprocessableEntity, serializers.ResponseError("database", err))
-	}
-	userSerializer := serializers.UserSerializer{c}
-	c.JSON(http.StatusOK, userSerializer.Response())
 }
 
 func UsersLogin(c *gin.Context) {
 
-	var payload validators.LoginRequest
-	if err := payload.Bind(c); err != nil {
-		c.JSON(http.StatusBadRequest, validators.ValidatorError(err))
+	bearer := c.Request.Header.Get("authorization")
+	jwtParts := strings.Split(bearer, " ")
+	jwtEncoded := jwtParts[1]
+	authPayload, err := utilities.GetGoogleUserPayload(jwtEncoded)
+	if err != nil {
+		c.JSON(http.StatusForbidden, serializers.ResponseError("login", errors.New("token invalid")))
 		return
 	}
-
-	user, err := services.FindOneUserByAttribute(&models.UserModel{Username: payload.Username})
-
+	user, err := services.GetOrCreateUserByEmail(authPayload)
 	if err != nil {
 		c.JSON(http.StatusForbidden, serializers.ResponseError("login", errors.New("user not found")))
 		return
 	}
 
-	if user.IsValidPassword(payload.Password) != nil {
-		c.JSON(http.StatusForbidden, serializers.ResponseError("login", errors.New("invalid credentials")))
-		return
+	middlerwares.UpdateUserContext(c, user)
+	userSerializers := serializers.UserSerializer{C: c}
+	c.JSON(http.StatusOK, userSerializers.UserLoginSuccessResponse())
+
+}
+
+func UserList(c *gin.Context) {
+	pageSizeStr := c.Query("page_size")
+	pageStr := c.Query("page")
+	pageSize, err := strconv.Atoi(pageSizeStr)
+	if err != nil {
+		pageSize = 5
 	}
 
-	c.JSON(http.StatusOK, dtos.CreateLoginSuccessful(&user))
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		page = 1
+	}
+	users, totalCount, err := services.FindUserPage(pageSize, page)
 
+	if err != nil {
+		c.JSON(http.StatusNotFound, serializers.ResponseError("users", errors.New("Invalid param")))
+	}
+	c.JSON(http.StatusOK, serializers.CreateUserPageResponse(users, page, pageSize, totalCount))
 }

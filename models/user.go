@@ -1,38 +1,19 @@
 package models
 
 import (
-	"errors"
+	"fmt"
 	"os"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
 type UserModel struct {
 	gorm.Model
-	Username     string `gorm:"column:username"`
-	Email        string `gorm:"column:email;unique_index"`
-	Bio          string `gorm:"column:bio;size:1024"`
-	PasswordHash string `gorm:"column:password;not null"`
-}
-
-func (u *UserModel) SetPassword(password string) error {
-	if len(password) == 0 {
-		return errors.New("password should not be empty!")
-	}
-	bytePassword := []byte(password)
-	// Make sure the second param `bcrypt generator cost` between [4, 32)
-	passwordHash, _ := bcrypt.GenerateFromPassword(bytePassword, bcrypt.DefaultCost)
-	u.PasswordHash = string(passwordHash)
-	return nil
-}
-
-func (u *UserModel) IsValidPassword(password string) error {
-	bytePassword := []byte(password)
-	byteHashedPassword := []byte(u.PasswordHash)
-	return bcrypt.CompareHashAndPassword(byteHashedPassword, bytePassword)
+	Username string `gorm:"column:username"`
+	Email    string `gorm:"column:email;unique_index"`
+	Bio      string `gorm:"column:bio;size:1024"`
 }
 
 func (user *UserModel) GenerateJwtToken() string {
@@ -55,15 +36,16 @@ type UserDao interface {
 	Delete(id int) error
 	GetById(id int) (UserModel, error)
 	GetByCondition(condition interface{}) (UserModel, error)
-	SearchUser(username string, limit string, page string) ([]UserModel, error)
+	FetchUsers(pageSize int, page int) ([]UserModel, int, error)
 }
 
 type UserDaoHandler struct {
 }
 
 func (h UserDaoHandler) Create(data interface{}) error {
+	fmt.Println(data)
 	db := GetDB()
-	err := db.Create(data).Error
+	err := db.Save(data).Error
 	return err
 }
 
@@ -92,9 +74,29 @@ func (h UserDaoHandler) GetById(id int) (UserModel, error) {
 	return userModel, err
 }
 
+func (h UserDaoHandler) GetUserByEmail(email string) (UserModel, error) {
+	db := GetDB()
+	var userModel UserModel
+	err := db.Where("email = ?", email).First(&userModel).Error
+	return userModel, err
+}
+
 func (h UserDaoHandler) GetByCondition(condition interface{}) (UserModel, error) {
 	database := GetDB()
 	var user UserModel
 	err := database.Where(condition).First(&user).Error
 	return user, err
+}
+
+func (h UserDaoHandler) FetchUsers(pageSize int, page int) ([]UserModel, int, error) {
+	database := GetDB()
+	var users []UserModel
+	var count int64
+	tx := database.Begin()
+	database.Model(&users).Count(&count)
+
+	tx.Model(&users).Offset((page - 1) * page).Limit(pageSize).Find(&users)
+	err := tx.Commit().Error
+
+	return users, int(count), err
 }

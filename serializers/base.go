@@ -2,7 +2,6 @@ package serializers
 
 import (
 	"math"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,7 +17,7 @@ func ResponseError(key string, err error) CommonError {
 	return res
 }
 
-func CreatePageMeta(request *http.Request, loadedItemsCount, page, page_size, totalItemsCount int) map[string]interface{} {
+func CreatePageMeta(loadedItemsCount, page, page_size, totalItemsCount int) map[string]interface{} {
 	page_meta := map[string]interface{}{}
 	page_meta["offset"] = (page - 1) * page_size
 	page_meta["requested_page_size"] = page_size
@@ -51,9 +50,9 @@ func CreatePageMeta(request *http.Request, loadedItemsCount, page, page_size, to
 	return response
 }
 
-func CreatePagedResponse(request *http.Request, resources []interface{}, resource_name string, page, page_size, totalItemsCount int) map[string]interface{} {
+func CreatePagedResponse(resources []interface{}, resource_name string, page, page_size, totalItemsCount int) map[string]interface{} {
 
-	response := CreatePageMeta(request, len(resources), page, page_size, totalItemsCount)
+	response := CreatePageMeta(len(resources), page, page_size, totalItemsCount)
 	response[resource_name] = resources
 	return response
 }

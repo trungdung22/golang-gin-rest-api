@@ -3,15 +3,20 @@ package main
 import (
 	"log"
 
+	"crud-api/config"
 	"crud-api/endpoints"
-	"crud-api/middlerwares"
-	"crud-api/model"
+	"crud-api/models"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	db, err := model.Database()
+	config, err := config.LoadConfig(".")
+
+	if err != nil {
+		log.Fatal("Could not load config", err)
+	}
+	db, err := models.Connection(config.DBUri)
 	if err != nil {
 		log.Println(err)
 	}
@@ -20,8 +25,7 @@ func main() {
 	router := gin.Default()
 
 	api := router.Group("/api")
-	api.Use(middlerwares.UserLoaderMiddleware())
 	endpoints.UsersRegisterRouter(api.Group("/users"))
 
-	log.Fatal(router.Run(":10000"))
+	log.Fatal(router.Run(":8080"))
 }

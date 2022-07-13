@@ -11,15 +11,14 @@ import (
 type UserSignUpRequest struct {
 	Username string `json:"username" binding:"required,alphanum,min=4,max=255"`
 	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=8,max=255"`
 	Bio      string `json:"bio" validate:"max=1024"`
 	Image    string `json:"image" validate:"omitempty,url"`
 }
 
 type LoginRequest struct {
 	// Username string `form:"username" json:"username" xml:"username" binding:"exists,username"`
-	Username string `form:"username" json:"username" xml:"username" binding:"required"`
-	Password string `form:"password"json:"password" binding:"exists,min=8,max=255"`
+	Username string `form:"username" json:"username" xml:"username" validate:"required"`
+	Password string `form:"password" json:"password" validate:"required,min=8,max=255"`
 }
 
 func SignupValidator(c *gin.Context) gin.HandlerFunc {

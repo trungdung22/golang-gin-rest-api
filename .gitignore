@@ -1,3 +1,4 @@
 /static/**
 .env
 app.db
+app.env
