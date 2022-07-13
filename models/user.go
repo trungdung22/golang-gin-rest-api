@@ -18,7 +18,7 @@ type UserModel struct {
 	PasswordHash string `gorm:"column:password;not null"`
 }
 
-func (u *UserModel) setPassword(password string) error {
+func (u *UserModel) SetPassword(password string) error {
 	if len(password) == 0 {
 		return errors.New("password should not be empty!")
 	}

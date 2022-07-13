@@ -7,7 +7,7 @@ import (
 )
 
 type UserSerializer struct {
-	c *gin.Context
+	C *gin.Context
 }
 
 type UserResponse struct {
@@ -18,7 +18,7 @@ type UserResponse struct {
 }
 
 func (self *UserSerializer) Response() UserResponse {
-	myUserModel := self.c.MustGet("currUser").(models.UserModel)
+	myUserModel := self.C.MustGet("currUser").(models.UserModel)
 	user := UserResponse{
 		Username: myUserModel.Username,
 		Email:    myUserModel.Email,

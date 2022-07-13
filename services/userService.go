@@ -6,12 +6,12 @@ import (
 )
 
 func CreateOneUser(userDto *validators.UserSignUpRequest) error {
-	user := models.UserModel{
-		Username: userDto.Username,
-		Email:    userDto.Email,
-		Bio:      userDto.Bio,
-	}
-	err := user.setPassword(userDto.Password)
+	var user models.UserModel
+	user.Username = userDto.Username
+	user.Bio = userDto.Bio
+	user.Email = userDto.Email
+
+	err := user.SetPassword(userDto.Password)
 
 	if err != nil {
 		return err
