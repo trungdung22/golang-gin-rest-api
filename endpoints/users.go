@@ -15,7 +15,6 @@ import (
 
 func UsersRegisterRouter(router *gin.RouterGroup) {
 	router.GET("/login", UsersLogin)
-	router.Use(middlerwares.UserLoaderMiddleware())
 	router.Use(middlerwares.EnforceAuthenticatedMiddleware())
 	{
 		router.GET("/", UserList)

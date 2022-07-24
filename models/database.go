@@ -17,7 +17,7 @@ func Connection(dbURL string) (*gorm.DB, error) {
 		log.Fatal(err.Error)
 	}
 
-	if err = db.AutoMigrate(&UserModel{}); err != nil {
+	if err = db.AutoMigrate(&User{}); err != nil {
 		log.Println(err)
 	}
 	DB = db

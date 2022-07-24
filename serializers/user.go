@@ -28,7 +28,7 @@ func (self *UserSerializer) UserCreatedSuccessResponse() UserCreateResponse {
 }
 
 func (self *UserSerializer) UserLoginSuccessResponse() UserLoginResponse {
-	user := self.C.MustGet("currentUser").(models.UserModel)
+	user := self.C.MustGet("currentUser").(models.User)
 	token := user.GenerateJwtToken()
 	response := UserLoginResponse{
 		Message: "login success",
@@ -37,7 +37,7 @@ func (self *UserSerializer) UserLoginSuccessResponse() UserLoginResponse {
 	return response
 }
 
-func CreateUserPageResponse(users []models.UserModel, page, pageSize, totalCount int) interface{} {
+func CreateUserPageResponse(users []models.User, page, pageSize, totalCount int) interface{} {
 	var resources = make([]interface{}, len(users))
 	for index, user := range users {
 		result := map[string]interface{}{

@@ -14,7 +14,7 @@ import (
 func EnforceAuthenticatedMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user, exists := c.Get("currentUser")
-		if exists && user.(models.UserModel).ID != 0 {
+		if exists && user.(models.User).ID != 0 {
 			return
 		} else {
 			err, _ := c.Get("authErr")
@@ -24,7 +24,7 @@ func EnforceAuthenticatedMiddleware() gin.HandlerFunc {
 	}
 }
 
-func UpdateUserContext(c *gin.Context, user models.UserModel) {
+func UpdateUserContext(c *gin.Context, user models.User) {
 	c.Set("currentUser", user)
 	c.Set("currentUserId", user.ID)
 }
@@ -46,12 +46,12 @@ func UserLoaderMiddleware() gin.HandlerFunc {
 				user, err := services.GetUserByEmail(authPayload.Email)
 
 				if err != nil {
-					c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": err.Error()})
 					return
 				}
 				UpdateUserContext(c, user)
 				c.Next()
 			}
 		}
+		c.Next()
 	}
 }
